@@ -1,688 +1,280 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Genie Code — Data Engineering Agent</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#0f0f13;--surface:#16161c;--surface2:#1e1e28;--surface3:#252532;
-  --border:#2a2a38;--border2:#343448;
-  --text:#e2e2f0;--text2:#9090b0;--text3:#60607a;--text4:#404058;
-  --purple:#a78bfa;--purple2:#7c3aed;--purple-dim:#2d1f5e;
-  --teal:#2dd4bf;--teal-dim:#0d3330;
-  --blue:#60a5fa;--blue-dim:#1a2d4a;
-  --amber:#fbbf24;--amber-dim:#3d2d00;
-  --green:#34d399;--green-dim:#0d3322;
-  --red:#f87171;--red-dim:#3d1010;
-  --pink:#f472b6;
-  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
-}
-body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
-@keyframes spin{to{transform:rotate(360deg);}}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-@keyframes glow{0%,100%{box-shadow:0 0 8px rgba(167,139,250,0.3)}50%{box-shadow:0 0 20px rgba(167,139,250,0.6)}}
-@keyframes slide-in{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-
-/* SCROLLBAR */
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-/* TOP NAV */
-#topnav{display:flex;align-items:center;height:44px;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;gap:10px;flex-shrink:0;}
-#nav-icon{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#7c3aed,#db2777);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 12px rgba(124,58,237,0.4);}
-#lakeflow-badge{font-size:10px;color:var(--purple);background:var(--purple-dim);padding:2px 8px;border-radius:3px;border:1px solid rgba(167,139,250,0.2);letter-spacing:0.3px;}
-.breadcrumb-sep{color:var(--text4);font-size:12px;}
-#nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.nav-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--font);font-weight:500;transition:all 0.15s;}
-.nav-btn:hover{background:var(--surface2);border-color:var(--border2);}
-.nav-btn-primary{background:var(--purple2);border:1px solid rgba(167,139,250,0.3);color:#fff;padding:5px 14px;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--font);font-weight:600;transition:all 0.15s;box-shadow:0 0 10px rgba(124,58,237,0.3);}
-.nav-btn-primary:hover{background:#6d28d9;box-shadow:0 0 16px rgba(124,58,237,0.5);}
-
-/* MAIN */
-#main{display:flex;flex:1;overflow:hidden;}
-
-/* LEFT */
-#left{flex:1;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-#left-topbar{display:flex;align-items:center;padding:0 14px;height:38px;border-bottom:1px solid var(--border);gap:12px;flex-shrink:0;}
-.left-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);padding:8px 4px;cursor:pointer;font-size:12px;font-family:var(--font);font-weight:500;transition:all 0.13s;}
-.left-tab.on{color:var(--purple);border-bottom-color:var(--purple);}
-#left-body{display:flex;flex:1;overflow:hidden;}
-
-/* WELCOME */
-#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;overflow-y:auto;}
-.w-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;transition:all 0.15s;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;}
-.w-card:hover{border-color:var(--purple2);box-shadow:0 0 16px rgba(124,58,237,0.15);}
-.w-card-title{font-size:13px;font-weight:600;color:var(--text);}
-.w-card-sub{font-size:11px;color:var(--text3);margin-top:2px;}
-#w-ai-btn{background:transparent;border:1.5px solid var(--purple);color:var(--purple);padding:10px 22px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);display:flex;align-items:center;gap:7px;transition:all 0.2s;margin-top:16px;}
-#w-ai-btn:hover{background:var(--purple-dim);box-shadow:0 0 16px rgba(167,139,250,0.3);}
-
-/* PIPELINE EDITOR */
-#pipeline-editor{display:none;flex:1;flex-direction:row;}
-#pipe-sidebar{width:200px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;background:var(--surface);}
-.ps-item{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:background 0.1s;}
-.ps-item:hover{background:var(--surface2);}
-.ps-item.on{background:var(--purple-dim);color:var(--purple);}
-
-/* RIGHT GENIE */
-#right{width:460px;display:flex;flex-direction:column;background:var(--surface);flex-shrink:0;border-left:1px solid var(--border);}
-#g-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
-#g-hdr-left{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;}
-.g-hdr-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:4px;transition:all 0.1s;}
-.g-hdr-btn:hover{background:var(--surface2);color:var(--text);}
-
-/* GENIE WELCOME */
-#g-welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;overflow-y:auto;}
-.gw-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:7px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:var(--font);font-weight:500;transition:all 0.13s;display:inline-flex;align-items:center;gap:5px;margin:0 4px 8px;}
-.gw-btn:hover{background:var(--surface3);color:var(--text);border-color:var(--purple);}
-#g-caps{width:100%;background:var(--surface2);border-radius:8px;border:1px solid var(--border);padding:4px 0;margin-top:8px;}
-.g-cap{display:flex;align-items:center;gap:10px;padding:7px 14px;font-size:12px;color:var(--text3);cursor:pointer;transition:background 0.1s;}
-.g-cap:hover{background:var(--surface3);color:var(--text2);}
-
-/* CHAT */
-#g-chat{flex:1;display:none;flex-direction:column;overflow:hidden;}
-#g-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
-
-/* MSG TYPES */
-.msg{animation:fade 0.2s ease;}
-.msg-user{background:var(--purple-dim);border:1px solid rgba(167,139,250,0.2);border-radius:10px 10px 4px 10px;padding:10px 13px;font-size:12.5px;color:var(--text);line-height:1.65;margin-left:30px;}
-.msg-thoughts{font-size:11px;color:var(--text3);line-height:1.75;padding:3px 0;border-left:2px solid var(--border2);padding-left:10px;margin:2px 0;}
-.thoughts-lbl{color:var(--text3);font-weight:500;}
-.msg-action{font-size:12.5px;color:var(--text2);line-height:1.7;padding:2px 0;}
-.msg-status{font-size:11px;color:var(--teal);display:flex;align-items:center;gap:7px;padding:3px 0;}
-.status-spin{width:12px;height:12px;border:1.5px solid var(--border2);border-top:1.5px solid var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;}
-.msg-fail{display:flex;align-items:center;justify-content:space-between;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);border-radius:5px;padding:6px 10px;font-size:11px;color:var(--red);}
-.msg-found{font-size:11px;color:var(--green);padding:2px 0;display:flex;align-items:center;gap:5px;}
-.msg-found::before{content:'✓';font-size:10px;}
-.msg-sql{background:#0d0d14;border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin:4px 0;}
-.sql-hdr{padding:6px 12px;background:#0a0a10;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-.sql-lbl{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono);}
-.sql-copy{font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font);transition:color 0.1s;}
-.sql-copy:hover{color:var(--text);}
-.sql-body{padding:12px;font-size:11px;color:#c9d1d9;font-family:var(--mono);line-height:1.9;overflow-x:auto;white-space:pre;}
-.kw{color:#bb9af7;font-weight:500;}.st{color:#9ece6a;}.cm{color:#565f89;font-style:italic;}.fn{color:#7dcfff;}.num{color:#ff9e64;}
-.msg-ap{border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface2);}
-.ap-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--surface3);border-bottom:1px solid var(--border);}
-.ap-hdr-txt{font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;color:var(--text);}
-.ap-count{font-size:11px;color:var(--text3);}
-.ap-item{display:flex;align-items:center;gap:10px;padding:8px 13px;border-bottom:1px solid var(--border);font-size:11.5px;color:var(--text2);transition:background 0.1s;}
-.ap-item:last-child{border-bottom:none;}
-.ap-item:hover{background:var(--surface3);}
-.ap-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
-.ap-done{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,0.3);}
-.ap-spin{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,0.3);}
-.ap-pend{background:var(--surface3);color:var(--text4);border:1px solid var(--border);}
-.msg-thinking{font-size:12px;color:var(--text3);font-style:italic;padding:3px 0;display:flex;align-items:center;gap:6px;}
-.dot-anim{display:inline-flex;gap:3px;}
-.dot-anim span{width:4px;height:4px;border-radius:50%;background:var(--purple);animation:pulse 1.2s ease-in-out infinite;}
-.dot-anim span:nth-child(2){animation-delay:0.2s;}
-.dot-anim span:nth-child(3){animation-delay:0.4s;}
-.msg-numbered{font-size:12.5px;color:var(--text2);line-height:1.75;padding:4px 0;}
-.msg-numbered ol,.msg-numbered ul{padding-left:20px;margin-top:6px;}
-.msg-numbered li{margin-bottom:6px;}
-.msg-numbered strong{font-weight:600;color:var(--text);}
-.msg-numbered code{background:var(--surface3);color:var(--teal);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:10.5px;border:1px solid var(--border);}
-.msg-quality{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;margin:4px 0;}
-.qual-title{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.qual-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid var(--border);}
-.qual-row:last-child{border-bottom:none;}
-.qual-col{color:var(--text3);font-family:var(--mono);font-size:10.5px;}
-.qual-pass{color:var(--green);}
-.qual-warn{color:var(--amber);}
-.qual-fail{color:var(--red);}
-.msg-monitor{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;margin:4px 0;}
-.mon-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
-.mon-card{background:var(--surface3);border-radius:6px;padding:8px 10px;border:1px solid var(--border);}
-.mon-label{font-size:10px;color:var(--text3);margin-bottom:3px;}
-.mon-val{font-size:16px;font-weight:600;color:var(--text);}
-.mon-sub{font-size:10px;color:var(--text3);margin-top:1px;}
-.msg-schema{background:#0d0d14;border:1px solid var(--border2);border-radius:8px;padding:10px 13px;margin:4px 0;font-family:var(--mono);font-size:11px;color:var(--text2);}
-.schema-title{color:var(--purple);font-weight:500;margin-bottom:6px;font-size:11px;}
-.schema-col{display:flex;gap:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
-.schema-col:last-child{border-bottom:none;}
-.sc-name{color:var(--blue);min-width:120px;}
-.sc-type{color:var(--amber);}
-.sc-note{color:var(--text4);}
-.msg-pipeline-created{background:linear-gradient(135deg,var(--purple-dim),var(--teal-dim));border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:12px 14px;margin:4px 0;}
-.pc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-.pc-badge{font-size:10px;background:var(--green-dim);color:var(--green);padding:2px 7px;border-radius:10px;border:1px solid rgba(52,211,153,0.3);}
-.pc-row{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;padding:2px 0;}
-.pc-row strong{color:var(--text2);}
-
-/* INPUT */
-#g-input{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;}
-#g-input-box{border:1px solid var(--border2);border-radius:9px;overflow:hidden;background:var(--surface2);transition:border-color 0.15s;}
-#g-input-box:focus-within{border-color:rgba(167,139,250,0.5);box-shadow:0 0 12px rgba(167,139,250,0.1);}
-#g-ta{width:100%;border:none;outline:none;padding:10px 13px;font-size:12.5px;font-family:var(--font);resize:none;line-height:1.55;min-height:38px;max-height:100px;color:var(--text);background:transparent;}
-#g-ta::placeholder{color:var(--text4);}
-#g-btm{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-top:1px solid var(--border);background:var(--surface3);}
-.inp-ic{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:3px;border-radius:3px;transition:color 0.1s;}
-.inp-ic:hover{color:var(--text2);}
-#agent-tog{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:none;border:1px solid var(--border2);padding:3px 9px;border-radius:4px;cursor:pointer;font-family:var(--font);transition:all 0.13s;}
-#agent-tog:hover{border-color:var(--purple);color:var(--purple);}
-#send-btn{background:none;border:none;color:var(--text4);cursor:pointer;font-size:18px;transition:all 0.15s;padding:2px 4px;border-radius:4px;}
-#send-btn.ready{color:var(--purple);}
-#send-btn.ready:hover{color:var(--purple);background:var(--purple-dim);}
-#g-footer{text-align:center;font-size:10px;color:var(--text4);padding:5px 12px;border-top:1px solid var(--border);background:var(--surface);}
-#context-tag{display:none;padding:5px 13px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);align-items:center;gap:6px;background:var(--surface2);}
-
-/* STEP PROGRESS */
-.step-prog{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;margin:4px 0;}
-.sp-title{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px;letter-spacing:0.5px;text-transform:uppercase;}
-.sp-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px;color:var(--text3);}
-.sp-row.done{color:var(--green);}
-.sp-row.running{color:var(--teal);}
-.sp-icon{font-size:12px;width:16px;text-align:center;}
-
-/* INTENT BADGE */
-.intent-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;font-size:10.5px;font-weight:600;letter-spacing:0.3px;font-family:var(--mono);}
-.ib-sql{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,0.2);}
-.ib-pipeline{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
-.ib-monitor{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,0.2);}
-.ib-optimize{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,191,36,0.2);}
-.ib-debug{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
-
-/* PERF BADGE */
-.perf-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);padding:2px 0;}
-.perf-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-
-/* STATUS BAR */
-#statusbar{display:flex;align-items:center;justify-content:space-between;padding:4px 14px;background:var(--surface);border-top:1px solid var(--border);font-size:10px;color:var(--text4);flex-shrink:0;}
-</style>
-</head>
-<body>
-<div id="topnav">
-  <div id="nav-icon">🔷</div>
-  <span id="breadcrumb" style="font-size:13px;color:var(--text3);">New Pipeline · 2026-03-13</span>
-  <div class="breadcrumb-sep">/</div>
-  <div id="lakeflow-badge">Lakeflow Pipelines Editor</div>
-  <div id="nav-right">
-    <span style="font-size:11px;color:var(--text3);">Need help?</span>
-    <a href="#" style="font-size:11px;color:var(--purple);text-decoration:none;">Contact support</a>
-    <button class="nav-btn" id="dry-run-btn" style="display:none;">⟳ Dry run</button>
-    <button class="nav-btn-primary" id="run-btn" style="display:none;">▶ Run pipeline</button>
-  </div>
-</div>
-<div id="main">
-  <div id="left">
-    <div id="left-topbar">
-      <button class="left-tab on">Pipeline</button>
-      <button class="left-tab">All files</button>
-      <button class="left-tab">Observability</button>
-      <span style="font-size:9px;color:var(--text4);margin-left:auto;">Last edit: just now</span>
-    </div>
-    <div id="left-body">
-      <div id="welcome">
-        <div style="font-size:36px;opacity:0.12;margin-bottom:10px;font-family:var(--mono);">{}</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text3);margin-bottom:2px;">Provide a catalog and schema</div>
-        <div style="font-size:11px;color:var(--text4);margin-bottom:28px;">Tables and event logs will be added by default</div>
-        <div style="font-size:20px;font-weight:600;color:var(--text);margin-bottom:3px;">Next step for your pipeline</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Get started with the quick links below</div>
-        <div style="width:100%;max-width:480px;">
-          <div class="w-card"><span style="font-size:14px;color:var(--blue);">⟨⟩</span><div><div class="w-card-title">Start with sample code in SQL</div><div class="w-card-sub">Medallion pipeline with Bronze/Silver/Gold layers</div></div></div>
-          <div class="w-card"><span style="font-size:14px;color:var(--teal);">🐍</span><div><div class="w-card-title">Start with sample code in Python</div><div class="w-card-sub">PySpark pipeline with Delta Lake integration</div></div></div>
-          <div style="font-size:11px;font-weight:600;color:var(--text3);margin:14px 0 8px;letter-spacing:0.5px;text-transform:uppercase;">Advanced options</div>
-          <div class="w-card"><span style="color:var(--text4);">⟨⟩</span><div><div class="w-card-title">Start with an empty file</div><div class="w-card-sub">New transformation file with no preloaded code</div></div></div>
-          <div class="w-card"><span style="color:var(--text4);">📄</span><div><div class="w-card-title">Add existing assets</div><div class="w-card-sub">Associate with code files in your Workspace</div></div></div>
-          <div class="w-card"><span style="color:var(--text4);">🔗</span><div><div class="w-card-title">Source-controlled project</div><div class="w-card-sub">Set up with Databricks Asset Bundles + version control</div></div></div>
-        </div>
-        <button id="w-ai-btn" onclick="startWithAI()"><span style="color:var(--purple);font-size:16px;">✦</span> Create pipeline with Genie AI</button>
-      </div>
-      <div id="pipeline-editor">
-        <div id="pipe-sidebar">
-          <div style="padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
-            <span style="font-size:11px;font-weight:600;color:var(--text);" id="pipe-name-lbl">tier_analytics</span>
-            <span style="font-size:12px;color:var(--text4);cursor:pointer;">+</span>
-          </div>
-          <div style="padding:9px 12px;border-bottom:1px solid var(--border);">
-            <div style="font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.5px;">PIPELINE CONFIG ⚙</div>
-            <div style="font-size:10px;color:var(--text4);margin-top:3px;">No runs yet · <span style="color:var(--teal);">🔗 Connected</span></div>
-          </div>
-          <div style="padding:6px;">
-            <div class="ps-item on" style="gap:5px;"><span>📁</span><span id="ps-name">tier_analytics</span></div>
-            <div class="ps-item" style="padding-left:20px;gap:5px;"><span>📁</span><span>transformations</span></div>
-            <div class="ps-item" style="padding-left:20px;gap:5px;"><span>📁</span><span>ingestion</span></div>
-            <div class="ps-item" style="padding-left:20px;gap:5px;"><span>📁</span><span>aggregations</span></div>
-          </div>
-          <div style="margin-top:auto;padding:10px 12px;border-top:1px solid var(--border);">
-            <div style="font-size:10px;color:var(--text4);">Schema: <span style="color:var(--teal);">main.default</span></div>
-            <div style="font-size:10px;color:var(--text4);margin-top:2px;">Cluster: <span style="color:var(--text3);">auto</span></div>
-          </div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;gap:20px;">
-          <div>
-            <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">Visualize your pipeline</div>
-            <div style="font-size:11px;color:var(--text3);">See how tables and views connect</div>
-          </div>
-          <div>
-            <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">Define pipeline logic</div>
-            <div style="font-size:11px;color:var(--text3);">Explore and edit source files</div>
-          </div>
-          <div>
-            <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">Extend your pipeline</div>
-            <div style="font-size:11px;color:var(--text3);">Add files based on predefined templates</div>
-          </div>
-          <button style="background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font);">+ Add files</button>
-        </div>
-      </div>
-    </div>
-    <div id="statusbar">
-      <div style="display:flex;gap:14px;"><span>Tables</span><span>Performance</span><span>Lineage</span></div>
-      <div style="display:flex;gap:8px;"><span style="color:var(--green);">✓ 0</span><span style="color:var(--amber);">⚠ 0</span><span style="color:var(--red);">⊘ 0</span></div>
-    </div>
-  </div>
-
-  <!-- RIGHT GENIE PANEL -->
-  <div id="right">
-    <div id="g-hdr">
-      <div id="g-hdr-left">
-        <span style="font-size:18px;color:var(--purple);filter:drop-shadow(0 0 6px rgba(167,139,250,0.5));">✦</span>
-        <span>Genie Code</span>
-        <span style="font-size:10px;background:var(--purple-dim);color:var(--purple);padding:1px 7px;border-radius:3px;font-weight:400;letter-spacing:0.3px;border:1px solid rgba(167,139,250,0.2);">Agent</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:3px;">
-        <button class="g-hdr-btn" title="New chat" onclick="resetChat()">+</button>
-        <button class="g-hdr-btn" title="Settings">⚙</button>
-        <button class="g-hdr-btn" title="History">⋮</button>
-        <button class="g-hdr-btn" title="Close">✕</button>
-      </div>
-    </div>
-    <div style="padding:5px 13px;font-size:11px;color:var(--text4);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
-      <span>Powered by Claude · Multi-step agent mode</span>
-      <a href="#" style="color:var(--purple);text-decoration:none;font-size:10px;">Docs ↗</a>
-    </div>
-    <div id="context-tag"></div>
-
-    <!-- WELCOME SCREEN -->
-    <div id="g-welcome">
-      <svg width="60" height="60" viewBox="0 0 100 100" style="margin-bottom:14px;filter:drop-shadow(0 0 12px rgba(167,139,250,0.4));">
-        <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#f472b6"/></linearGradient></defs>
-        <circle cx="50" cy="32" r="16" fill="none" stroke="url(#lg)" stroke-width="5"/>
-        <path d="M50 8 L50 18" stroke="url(#lg)" stroke-width="4" stroke-linecap="round" fill="none"/>
-        <path d="M50 8 L55 13" stroke="url(#lg)" stroke-width="3" stroke-linecap="round" fill="none"/>
-        <path d="M18 52 Q34 42 50 52 Q66 62 82 52" fill="none" stroke="url(#lg)" stroke-width="5" stroke-linecap="round"/>
-        <line x1="50" y1="64" x2="50" y2="78" stroke="url(#lg)" stroke-width="5" stroke-linecap="round"/>
-        <line x1="38" y1="78" x2="62" y2="78" stroke="url(#lg)" stroke-width="5" stroke-linecap="round"/>
-      </svg>
-      <div style="font-size:20px;font-weight:600;margin-bottom:5px;">Genie Code</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:20px;text-align:center;line-height:1.6;">Autonomous multi-step data engineering agent.<br>SQL · Pipelines · Quality · Monitoring · Debug</div>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
-        <button class="gw-btn" onclick="quickPrompt('Create a medallion pipeline for sales data from S3')">Create a pipeline</button>
-        <button class="gw-btn" onclick="quickPrompt('Show me revenue by product category this quarter vs last quarter')">Run analytics</button>
-        <button class="gw-btn" onclick="quickPrompt('Show pipeline health metrics and any anomalies')">Monitor health</button>
-        <button class="gw-btn" onclick="quickPrompt('Optimize this slow query: SELECT * FROM orders WHERE DATE(created_at) > \'2024-01-01\'')">Optimize SQL</button>
-      </div>
-      <div id="g-caps">
-        <div class="g-cap" onclick="quickPrompt('List available tables and their schemas')"><span style="font-size:12px;width:18px;text-align:center;">▦</span> Tables & schemas</div>
-        <div class="g-cap" onclick="quickPrompt('Generate a Bronze/Silver/Gold pipeline')"><span style="font-size:12px;width:18px;text-align:center;">⟳</span> Medallion pipelines</div>
-        <div class="g-cap" onclick="quickPrompt('Run data quality validation on sales.orders')"><span style="font-size:12px;width:18px;text-align:center;">✓</span> Data quality checks</div>
-        <div class="g-cap" onclick="quickPrompt('Show me pipeline health report and SLA status')"><span style="font-size:12px;width:18px;text-align:center;">📡</span> Observability & monitoring</div>
-        <div class="g-cap" onclick="quickPrompt('Debug why my ETL job failed last night')"><span style="font-size:12px;width:18px;text-align:center;">🔍</span> Error detection & debug</div>
-        <div class="g-cap" onclick="quickPrompt('Optimize this SQL query for better performance')"><span style="font-size:12px;width:18px;text-align:center;">⚡</span> SQL optimization</div>
-        <div class="g-cap"><span style="font-size:12px;width:18px;text-align:center;">🔀</span> Visual ETLs</div>
-        <div class="g-cap"><span style="font-size:12px;width:18px;text-align:center;">📓</span> Notebooks</div>
-        <div class="g-cap"><span style="font-size:12px;width:18px;text-align:center;">✦</span> AI agent bricks</div>
-      </div>
-    </div>
-
-    <!-- CHAT -->
-    <div id="g-chat">
-      <div id="g-msgs"></div>
-    </div>
-
-    <!-- INPUT -->
-    <div id="g-input">
-      <div id="g-input-box">
-        <textarea id="g-ta" placeholder="Ask Genie to create a pipeline, run analytics, check quality..." rows="2"></textarea>
-        <div id="g-btm">
-          <div style="display:flex;gap:4px;">
-            <button class="inp-ic" title="Attach file">🖼</button>
-            <button class="inp-ic" title="Mention asset" onclick="insertAt()">@</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button id="agent-tog">✦ Agent</button>
-            <button id="send-btn" onclick="go()">▶</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="g-footer">Genie Code · Powered by Claude · Always review responses.</div>
-  </div>
-</div>
-
 <script>
-const API_URL = 'https://api.anthropic.com/v1/messages';
-let busy = false;
-let sessionContext = { lastSQL: null, lastTable: null, pipelineName: null, turns: [] };
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+const API='https://genie-code.vercel.app/api/genie'
+
+let busy=false
+
+/* conversation memory */
+let chatHistory=[
+{
+role:"system",
+content:`You are Genie Code, an AI Data Engineering agent similar to Databricks Genie.
+Help users design pipelines, generate SQL queries, explore tables and plan medallion architecture.
+Always think step by step and provide structured responses.`
+}
+]
+
+function esc(s){
+return String(s||'')
+.replace(/&/g,'&amp;')
+.replace(/</g,'&lt;')
+.replace(/>/g,'&gt;')
+}
 
 function sqlHL(c){
-  return esc(c)
-    .replace(/--[^\n]*/g, m => `<span class="cm">${m}</span>`)
-    .replace(/\b(SELECT|FROM|WHERE|GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|INNER\s+JOIN|ON|AS|WITH|AND|OR|UNION|ALL|DISTINCT|CASE|WHEN|THEN|ELSE|END|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TABLE|VIEW|INDEX|NOT\s+IN|IN|IS\s+NULL|IS\s+NOT\s+NULL|PARTITION\s+BY|OVER|RANK|ROW_NUMBER|LAG|LEAD|SUM|COUNT|AVG|MAX|MIN|COALESCE|NULLIF|CAST|BROADCAST)\b/gi,
-      '<span class="kw">$1</span>')
-    .replace(/'([^']*)'/g, '<span class="st">\'$1\'</span>')
-    .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="num">$1</span>')
-    .replace(/\b(DATE|TIMESTAMP|DATEDIFF|DATE_TRUNC|DATE_ADD|YEAR|MONTH|DAY|CURRENT_DATE|NOW)\b/gi, '<span class="fn">$1</span>');
+return esc(c)
+.replace(/\b(SELECT|FROM|WHERE|GROUP BY|ORDER BY|LIMIT|JOIN|ON|AS|WITH|AND|OR|COUNT|SUM|AVG)\b/gi,'<span class="kw">$1</span>')
+.replace(/'([^']*)'/g,'<span class="st">\'$1\'</span>')
 }
 
-function addMsg(html){ 
-  const g = document.getElementById('g-msgs');
-  const d = document.createElement('div'); 
-  d.className = 'msg'; 
-  d.innerHTML = html; 
-  g.appendChild(d); 
-  g.scrollTop = g.scrollHeight; 
-  return d;
+function addMsg(html){
+
+const g=document.getElementById('g-msgs')
+
+const d=document.createElement('div')
+d.className='msg'
+d.innerHTML=html
+
+g.appendChild(d)
+
+g.scrollTop=g.scrollHeight
+
+return d
 }
 
-function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
+function delay(ms){
+return new Promise(r=>setTimeout(r,ms))
+}
 
 function switchToChat(){
-  document.getElementById('g-welcome').style.display = 'none';
-  const c = document.getElementById('g-chat');
-  c.style.display = 'flex';
-  c.style.flexDirection = 'column';
+
+document.getElementById('g-welcome').style.display='none'
+
+const c=document.getElementById('g-chat')
+
+c.style.display='flex'
+c.style.flexDirection='column'
+
+document.getElementById("g-ta").focus()
 }
 
-function quickPrompt(t){ document.getElementById('g-ta').value = t; go(); }
-function insertAt(){ const ta = document.getElementById('g-ta'); ta.value += '@'; ta.focus(); }
-function startWithAI(){ switchToChat(); }
+function quickPrompt(t){
 
-function resetChat(){
-  document.getElementById('g-msgs').innerHTML = '';
-  document.getElementById('g-welcome').style.display = 'flex';
-  document.getElementById('g-chat').style.display = 'none';
-  sessionContext = { lastSQL: null, lastTable: null, pipelineName: null, turns: [] };
+document.getElementById('g-ta').value=t
+go()
+
+}
+
+function insertAt(){
+
+const ta=document.getElementById('g-ta')
+
+ta.value+='@'
+ta.focus()
+
+}
+
+function startWithAI(){
+
+switchToChat()
+
 }
 
 function showPipeline(name){
-  document.getElementById('welcome').style.display = 'none';
-  const pe = document.getElementById('pipeline-editor');
-  pe.style.display = 'flex';
-  pe.style.flex = '1';
-  document.getElementById('pipe-name-lbl').textContent = name;
-  document.getElementById('ps-name').textContent = name;
-  document.getElementById('breadcrumb').textContent = name + ' · 2026-03-13';
-  const ct = document.getElementById('context-tag');
-  ct.style.display = 'flex';
-  ct.innerHTML = `<span>🔗</span><span style="color:var(--purple);font-size:11px;">${esc(name)}</span><span style="margin-left:auto;font-size:10px;color:var(--green);">● Live</span>`;
-  document.getElementById('dry-run-btn').style.display = 'block';
-  document.getElementById('run-btn').style.display = 'block';
+
+document.getElementById('welcome').style.display='none'
+
+const pe=document.getElementById('pipeline-editor')
+
+pe.style.display='flex'
+pe.style.flex='1'
+
+document.getElementById('pipe-name-lbl').textContent=name
+document.getElementById('ps-name').textContent=name
+
+document.getElementById('breadcrumb').textContent=name
+
+document.getElementById('dry-run-btn').style.display='block'
+document.getElementById('run-btn').style.display='block'
+
 }
 
-function getIntentBadge(intent){
-  const map = {
-    sql_query: ['ib-sql', '⟨⟩ SQL query'],
-    create_pipeline: ['ib-pipeline', '⟳ Pipeline'],
-    monitor: ['ib-monitor', '📡 Monitor'],
-    optimize_sql: ['ib-optimize', '⚡ Optimize'],
-    debug_job: ['ib-debug', '🔍 Debug'],
-    explain: ['ib-sql', '? Explain'],
-    quality: ['ib-monitor', '✓ Quality'],
-  };
-  const [cls, label] = map[intent] || map.sql_query;
-  return `<span class="intent-badge ${cls}">${label}</span>`;
-}
-
-function buildSystemPrompt(){
-  const schema = `
-Available tables in main.default:
-- sales.orders (order_id BIGINT PK, customer_id BIGINT, product_id BIGINT, amount DECIMAL, order_date DATE, status STRING, region STRING) — partitioned by order_date
-- sales.products (product_id BIGINT PK, product_name STRING, category STRING, unit_price DECIMAL)
-- sales.customers (customer_id BIGINT PK, name STRING, email STRING, tier STRING, created_date DATE)
-- ops.pipeline_runs (run_id STRING, pipeline_name STRING, status STRING, duration_seconds INT, rows_processed BIGINT, start_time TIMESTAMP)
-`;
-  const contextNote = sessionContext.lastSQL 
-    ? `\nLast SQL run: ${sessionContext.lastSQL}\nLast table: ${sessionContext.lastTable}` 
-    : '';
-
-  return `You are Genie Code, an autonomous data engineering AI agent inside Databricks Lakeflow Pipelines.
-You help users with: SQL analytics, pipeline creation, data quality, monitoring, SQL optimization, and debugging.
-
-${schema}${contextNote}
-
-You MUST respond ONLY with valid JSON (no markdown, no backticks). Use this exact structure:
-{
-  "intent": "sql_query|create_pipeline|monitor|optimize_sql|debug_job|explain|quality",
-  "thoughts": "Brief internal analysis of what user needs",
-  "steps": [{"title": "Step name", "status": "done|running|pending"}],
-  "agentPlan": [{"step": 1, "title": "Plan step title", "status": "done|pending"}],
-  "generatedSQL": "The SQL query if relevant (null otherwise)",
-  "optimizedSQL": "Optimized version if applicable (null otherwise)",
-  "optimizations": ["list of specific optimizations applied"],
-  "schemaInfo": [{"name": "col", "type": "TYPE", "note": "description"}],
-  "qualityChecks": [{"column": "col", "check": "null_rate", "result": "0.2%", "status": "pass|warn|fail"}],
-  "monitorMetrics": {"successRate": 96.4, "avgDuration": 312, "totalRuns": 80, "failedRuns": 3, "anomalies": ["brief anomaly description"]},
-  "pipelineName": "snake_case_name if creating a pipeline, else null",
-  "summary": "Concise answer to the user in 2-3 sentences",
-  "nextSteps": ["actionable next step 1", "actionable next step 2", "actionable next step 3"],
-  "debugAnalysis": "Root cause analysis if debugging (null otherwise)",
-  "estimatedSpeedup": "e.g. 4-6x faster (null if not optimizing)"
-}`;
-}
-
-async function callClaude(userQuery){
-  sessionContext.turns.push({ role: 'user', content: userQuery });
-  const messages = sessionContext.turns.slice(-6);
-
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: buildSystemPrompt(),
-      messages
-    })
-  });
-
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  const data = await res.json();
-  const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
-
-  let parsed;
-  try {
-    const clean = raw.replace(/```json\n?|\n?```/g, '').trim();
-    parsed = JSON.parse(clean);
-  } catch(e) {
-    parsed = { intent: 'sql_query', summary: raw, steps: [], agentPlan: [] };
-  }
-
-  sessionContext.turns.push({ role: 'assistant', content: raw });
-  if(parsed.generatedSQL) sessionContext.lastSQL = parsed.generatedSQL;
-  return parsed;
-}
+/* MAIN AI FUNCTION */
 
 async function go(){
-  if(busy) return;
-  const ta = document.getElementById('g-ta');
-  const prompt = ta.value.trim();
-  if(!prompt) return;
-  ta.value = '';
-  busy = true;
-  document.getElementById('send-btn').classList.remove('ready');
-  switchToChat();
 
-  addMsg(`<div class="msg-user">${esc(prompt)}</div>`);
+if(busy)return
 
-  // Thinking
-  const thinkEl = addMsg(`<div class="msg-thinking"><div class="dot-anim"><span></span><span></span><span></span></div> Analyzing request…</div>`);
-  await delay(600);
+const ta=document.getElementById('g-ta')
 
-  let r;
-  try {
-    r = await callClaude(prompt);
-  } catch(e) {
-    thinkEl.innerHTML = `<div class="msg-action" style="color:var(--red);">⛔ ${esc(e.message)}</div>`;
-    busy = false;
-    return;
-  }
+const prompt=ta.value.trim()
 
-  thinkEl.innerHTML = `<div class="msg-thoughts"><span class="thoughts-lbl">Thoughts · </span>${esc(r.thoughts || 'Analyzing the request and planning execution…')}</div>`;
-  await delay(300);
+if(!prompt)return
 
-  // Intent badge
-  addMsg(`<div style="padding:2px 0;">${getIntentBadge(r.intent || 'sql_query')}</div>`);
-  await delay(200);
+ta.value=''
 
-  // Steps execution
-  if(r.steps?.length){
-    const stepHTML = r.steps.map(s => {
-      const cls = s.status === 'done' ? 'done' : s.status === 'running' ? 'running' : '';
-      const icon = s.status === 'done' ? '✓' : s.status === 'running' ? '⟳' : '○';
-      return `<div class="sp-row ${cls}"><span class="sp-icon">${icon}</span>${esc(s.title)}</div>`;
-    }).join('');
-    addMsg(`<div class="step-prog"><div class="sp-title">Execution steps</div>${stepHTML}</div>`);
-    await delay(400);
-  }
+busy=true
 
-  // Schema info
-  if(r.schemaInfo?.length){
-    const rows = r.schemaInfo.map(c =>
-      `<div class="schema-col"><span class="sc-name">${esc(c.name)}</span><span class="sc-type">${esc(c.type)}</span><span class="sc-note">${esc(c.note||'')}</span></div>`
-    ).join('');
-    addMsg(`<div class="msg-schema"><div class="schema-title">▦ Schema context</div>${rows}</div>`);
-    await delay(300);
-  }
+document.getElementById('send-btn').classList.remove('ready')
 
-  // Generated SQL
-  if(r.generatedSQL){
-    const copyId = 'sql-' + Date.now();
-    addMsg(`<div class="msg-sql">
-      <div class="sql-hdr"><span class="sql-lbl">Generated SQL</span><button class="sql-copy" onclick="copySQL('${copyId}')">Copy</button></div>
-      <pre class="sql-body" id="${copyId}">${sqlHL(r.generatedSQL)}</pre>
-    </div>`);
-    addMsg(`<div class="msg-status"><div class="status-spin"></div> Executing on Databricks…</div>`);
-    await delay(700);
-    addMsg(`<div class="msg-status" style="color:var(--green);">✓ Query executed · ${Math.floor(Math.random()*8000+1000).toLocaleString()} rows · ${(Math.random()*15+0.8).toFixed(1)}s</div>`);
-    await delay(200);
-  }
+switchToChat()
 
-  // Optimized SQL
-  if(r.optimizedSQL && r.intent === 'optimize_sql'){
-    const opts = (r.optimizations||[]).map(o => `<div class="perf-row"><div class="perf-dot" style="background:var(--amber);"></div>${esc(o)}</div>`).join('');
-    addMsg(`<div class="msg-monitor" style="margin:4px 0;">
-      <div class="qual-title" style="color:var(--amber);">⚡ Optimizations applied${r.estimatedSpeedup ? ' · <span style="color:var(--green);">'+esc(r.estimatedSpeedup)+'</span>' : ''}</div>
-      ${opts}
-    </div>`);
-    await delay(200);
-    const copyId2 = 'sql-opt-' + Date.now();
-    addMsg(`<div class="msg-sql">
-      <div class="sql-hdr"><span class="sql-lbl">Optimized SQL</span><button class="sql-copy" onclick="copySQL('${copyId2}')">Copy</button></div>
-      <pre class="sql-body" id="${copyId2}">${sqlHL(r.optimizedSQL)}</pre>
-    </div>`);
-    await delay(200);
-  }
+addMsg(`<div class="msg-user">${esc(prompt)}</div>`)
 
-  // Data quality
-  if(r.qualityChecks?.length){
-    const rows = r.qualityChecks.map(c => {
-      const cls = c.status === 'pass' ? 'qual-pass' : c.status === 'warn' ? 'qual-warn' : 'qual-fail';
-      const icon = c.status === 'pass' ? '✓' : c.status === 'warn' ? '⚠' : '✕';
-      return `<div class="qual-row"><span class="qual-col">${esc(c.column)}</span><span style="color:var(--text3);font-size:11px;">${esc(c.check)}</span><span>${esc(c.result)}</span><span class="${cls}">${icon}</span></div>`;
-    }).join('');
-    addMsg(`<div class="msg-quality">
-      <div class="qual-title" style="color:var(--teal);">✓ Data quality report</div>
-      ${rows}
-    </div>`);
-    await delay(300);
-  }
+/* save message */
 
-  // Monitor metrics
-  if(r.monitorMetrics && r.intent === 'monitor'){
-    const m = r.monitorMetrics;
-    const srColor = m.successRate > 95 ? 'var(--green)' : m.successRate > 85 ? 'var(--amber)' : 'var(--red)';
-    const anomalyHTML = (m.anomalies||[]).map(a => `<div class="msg-fail" style="margin-top:6px;">${esc(a)}</div>`).join('');
-    addMsg(`<div class="msg-monitor">
-      <div class="qual-title" style="color:var(--teal);">📡 Pipeline health report</div>
-      <div class="mon-grid">
-        <div class="mon-card"><div class="mon-label">Success rate</div><div class="mon-val" style="color:${srColor}">${m.successRate?.toFixed(1)}%</div><div class="mon-sub">${m.totalRuns} total runs</div></div>
-        <div class="mon-card"><div class="mon-label">Avg duration</div><div class="mon-val">${m.avgDuration}s</div><div class="mon-sub">${m.failedRuns} failed</div></div>
-      </div>
-      ${anomalyHTML}
-    </div>`);
-    await delay(300);
-  }
+chatHistory.push({
+role:"user",
+content:prompt
+})
 
-  // Debug analysis
-  if(r.debugAnalysis && r.intent === 'debug_job'){
-    addMsg(`<div class="msg-monitor">
-      <div class="qual-title" style="color:var(--red);">🔍 Debug analysis</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;">${esc(r.debugAnalysis)}</div>
-    </div>`);
-    await delay(200);
-  }
+/* thinking animation */
 
-  // Agent plan
-  if(r.agentPlan?.length){
-    const items = r.agentPlan.map(p => {
-      const cls = p.status === 'done' ? 'ap-done' : p.status === 'running' ? 'ap-spin' : 'ap-pend';
-      const icon = p.status === 'done' ? '✓' : p.status === 'running' ? '⟳' : p.step;
-      return `<div class="ap-item"><div class="ap-dot ${cls}">${icon}</div><span>${esc(p.title)}</span></div>`;
-    }).join('');
-    const doneCount = r.agentPlan.filter(p => p.status === 'done').length;
-    addMsg(`<div class="msg-ap">
-      <div class="ap-hdr"><div class="ap-hdr-txt"><span style="color:var(--purple);">⚡</span> Agent execution plan</div><div class="ap-count">${doneCount} of ${r.agentPlan.length} complete</div></div>
-      ${items}
-    </div>`);
-    await delay(300);
-  }
+const thinking = addMsg(`
+<div class="msg-thinking">
+<span class="dots">Genie is analysing your request</span>
+</div>
+`)
 
-  // Pipeline creation
-  if(r.pipelineName){
-    sessionContext.pipelineName = r.pipelineName;
-    addMsg(`<div class="msg-pipeline-created">
-      <div class="pc-title">⟳ Pipeline created <span class="pc-badge">Success</span></div>
-      <div class="pc-row"><span>📁</span> <strong>${esc(r.pipelineName)}</strong></div>
-      <div class="pc-row"><span>🗄</span> Catalog: <strong>main.default</strong></div>
-      <div class="pc-row"><span>⟳</span> Architecture: <strong>Bronze → Silver → Gold</strong></div>
-    </div>`);
-    await delay(400);
-    showPipeline(r.pipelineName);
-  }
+try{
 
-  // Summary
-  if(r.summary){
-    addMsg(`<div class="msg-numbered">${esc(r.summary)}</div>`);
-    await delay(200);
-  }
+const res = await fetch(API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messages:chatHistory
+})
+})
 
-  // Next steps
-  if(r.nextSteps?.length){
-    const items = r.nextSteps.map(s => `<li>${esc(s)}</li>`).join('');
-    addMsg(`<div class="msg-numbered"><strong>Next steps:</strong><ol style="margin-top:6px;">${items}</ol></div>`);
-  }
+const data = await res.json()
 
-  busy = false;
-  document.getElementById('send-btn').classList.add('ready');
-  document.getElementById('g-msgs').scrollTop = 99999;
+thinking.remove()
+
+/* store assistant response */
+
+chatHistory.push({
+role:"assistant",
+content:JSON.stringify(data)
+})
+
+/* PIPELINE DETECTION */
+
+if(prompt.toLowerCase().includes("pipeline")){
+
+let pname='new_pipeline'
+
+const nm=prompt.match(/name\s+["']?(\w+)["']?/i)
+
+if(nm)pname=nm[1]
+
+addMsg(`
+<div class="msg-action">
+Creating pipeline <strong>${pname}</strong>
+</div>
+`)
+
+await delay(600)
+
+addMsg(`
+<div class="msg-status">
+Pipeline created successfully
+</div>
+`)
+
+showPipeline(pname)
+
 }
 
-function copySQL(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  navigator.clipboard.writeText(el.textContent).catch(()=>{});
-  const btn = el.closest('.msg-sql')?.querySelector('.sql-copy');
-  if(btn){ btn.textContent = 'Copied!'; setTimeout(()=>{ btn.textContent='Copy'; }, 1500); }
+/* SQL detection */
+
+if(data.sql){
+
+addMsg(`
+<div class="msg-sql">
+<div class="sql-hdr">
+<span class="sql-lbl">SQL</span>
+</div>
+<pre class="sql-body">${sqlHL(data.sql)}</pre>
+</div>
+`)
+
 }
 
-const ta = document.getElementById('g-ta');
-ta.addEventListener('input', function(){
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-  document.getElementById('send-btn').classList.toggle('ready', this.value.trim().length > 0);
-});
-ta.addEventListener('keydown', e => {
-  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); go(); }
-});
+/* Agent plan */
+
+if(data.agentPlan){
+
+const items=data.agentPlan.map(p=>
+`<div class="ap-item">
+<div class="ap-dot ap-done">✓</div>
+<span>${esc(p.title)}</span>
+</div>`
+).join("")
+
+addMsg(`
+<div class="msg-ap">
+<div class="ap-hdr">
+<div class="ap-hdr-txt">Agent Plan</div>
+</div>
+${items}
+</div>
+`)
+
+}
+
+/* assistant answer */
+
+addMsg(`
+<div class="msg-numbered">
+${esc(data.answer || data.summary || "Task completed")}
+</div>
+`)
+
+}catch(e){
+
+thinking.innerHTML=`
+<div class="msg-action" style="color:red">
+Error: ${esc(e.message)}
+</div>
+`
+
+}
+
+busy=false
+
+document.getElementById('send-btn').classList.add('ready')
+
+document.getElementById('g-msgs').scrollTop=99999
+
+}
+
+/* textarea behaviour */
+
+const ta=document.getElementById('g-ta')
+
+ta.addEventListener('input',function(){
+
+this.style.height='auto'
+
+this.style.height=Math.min(this.scrollHeight,100)+'px'
+
+document.getElementById('send-btn')
+.classList.toggle('ready',this.value.trim().length>0)
+
+})
+
+ta.addEventListener('keydown',e=>{
+
+if(e.key==='Enter'&&!e.shiftKey){
+
+e.preventDefault()
+
+go()
+
+}
+
+})
+
 </script>
-</body>
-</html>
