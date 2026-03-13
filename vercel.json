@@ -1,23 +1,8 @@
 {
-  "version": 2,
-  "builds": [
+  "builds":[
     {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/genie.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/genie",
-      "dest": "/api/genie.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "src":"api/genie.js",
+      "use":"@vercel/node"
     }
   ]
 }
