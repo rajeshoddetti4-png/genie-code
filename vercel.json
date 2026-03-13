@@ -1,8 +1,8 @@
 {
-  "builds":[
+  "routes":[
     {
-      "src":"api/genie.js",
-      "use":"@vercel/node"
+      "src":"/api/(.*)",
+      "dest":"/api/$1"
     }
   ]
 }
