@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Genie — Code · All Features</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg0:#0d1117;--bg1:#161b22;--bg2:#21262d;
+  --text0:#e6edf3;--text1:#c9d1d9;--text2:#8b949e;--text3:#484f58;
+  --amber:#f59e0b;--amber2:#fbbf24;
+  --cyan:#22d3ee;--cyan2:#67e8f9;
+  --border:#21262d;
+  --green:#3fb950;--red:#f85149;--blue:#58a6ff;
+  --font:ui-monospace,'JetBrains Mono','Fira Code','Cascadia Code',monospace;
+}
+body{background:var(--bg0);color:var(--text1);font-family:var(--font);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
+
+/* HEADER */
+#hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 18px;background:var(--bg1);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+#logo-row{display:flex;align-items:center;gap:10px;}
+#logo-box{
+  width:32px;height:32px;border-radius:7px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;box-shadow:0 0 12px #f59e0b55;
+}
+#logo-name{font-size:14px;font-weight:800;color:var(--text0);letter-spacing:1px;}
+#logo-sub{font-size:8px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;margin-top:1px;}
+#live-pill{
+  display:flex;align-items:center;gap:5px;
+  border:1px solid var(--border);border-radius:20px;padding:4px 10px;
+  font-size:9px;letter-spacing:1px;color:var(--green);
+}
+#live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+
+/* BODY */
+#body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+#sidebar{
+  width:210px;background:var(--bg0);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;
+}
+#sb-head{
+  padding:12px 14px 8px;font-size:8px;color:var(--text3);
+  letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);
+}
+.nav{
+  display:flex;align-items:center;gap:9px;padding:9px 14px;
+  cursor:pointer;color:var(--text3);border-left:2px solid transparent;
+  transition:all 0.13s;font-size:11px;
+}
+.nav:hover{background:var(--bg1);color:var(--text1);}
+.nav.on{background:var(--bg1);color:var(--text0);border-left-color:var(--amber);}
+.nav-ic{font-size:13px;min-width:16px;}
+
+/* CONTENT */
+#content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#feat-hdr{
+  padding:13px 20px;border-bottom:1px solid var(--border);
+  background:var(--bg1);flex-shrink:0;
+}
+#feat-title{font-size:17px;font-weight:700;color:var(--amber);letter-spacing:0.5px;}
+#feat-sub{font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:3px;}
+
+/* SPLIT */
+#split{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT PANE */
+#left{
+  width:420px;display:flex;flex-direction:column;
+  border-right:1px solid var(--border);background:var(--bg0);flex-shrink:0;
+}
+#prompt-hdr{
+  padding:8px 14px;background:var(--bg1);border-bottom:1px solid var(--border);
+  font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;
+}
+#prompt-area{
+  flex:1;background:var(--bg0);color:var(--text0);border:none;
+  padding:14px 16px;font-size:12px;line-height:1.85;resize:none;outline:none;
+  font-family:var(--font);min-height:0;
+}
+#prompt-area::placeholder{color:var(--text3);}
+
+/* HINTS */
+#hints-wrap{border-top:1px solid var(--border);padding:10px 12px;}
+#hints-lbl{font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;}
+.chip{
+  display:flex;align-items:flex-start;gap:8px;
+  background:var(--bg1);border:1px solid var(--border);border-radius:6px;
+  padding:7px 10px;margin-bottom:5px;cursor:pointer;
+  font-size:10px;color:var(--text2);line-height:1.5;transition:all 0.13s;
+}
+.chip:hover{border-color:#f59e0b55;color:var(--text0);}
+.chip-ic{color:var(--amber);font-size:11px;flex-shrink:0;margin-top:1px;}
+
+/* RUN BUTTON */
+#run-wrap{padding:10px 12px 12px;}
+#shortcut{text-align:center;font-size:9px;color:var(--text3);margin-bottom:6px;}
+#run-btn{
+  width:100%;padding:11px;
+  background:linear-gradient(135deg,var(--cyan),#0ea5e9);
+  color:#000;border:none;border-radius:8px;cursor:pointer;
+  font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  font-family:var(--font);box-shadow:0 0 18px #22d3ee44;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+#run-btn:hover{box-shadow:0 0 28px #22d3ee66;}
+#run-btn:disabled{background:var(--bg2);color:var(--text3);cursor:not-allowed;box-shadow:none;}
+
+/* RIGHT PANE */
+#right{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* IDLE */
+#idle{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+}
+#idle-ic{font-size:52px;opacity:0.08;}
+#idle-txt{font-size:12px;color:var(--text3);}
+
+/* LOADING */
+#loading{
+  flex:1;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;
+}
+#spinner{
+  width:44px;height:44px;border:3px solid var(--bg2);
+  border-top:3px solid var(--amber);border-radius:50%;
+  animation:spin 0.75s linear infinite;
+}
+#load-txt{color:var(--text0);font-size:12px;font-weight:700;}
+#load-sub{color:var(--text3);font-size:9px;letter-spacing:2px;}
+
+/* RESULTS */
+#results{flex:1;display:none;flex-direction:column;overflow:hidden;}
+#tabs{
+  display:flex;border-bottom:1px solid var(--border);
+  background:var(--bg0);padding:0 16px;flex-shrink:0;overflow-x:auto;
+}
+.tab{
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--text3);padding:9px 11px;cursor:pointer;
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  font-family:var(--font);transition:all 0.13s;white-space:nowrap;
+}
+.tab:hover{color:var(--text1);}
+.tab.on{color:var(--amber);border-bottom-color:var(--amber);}
+#panels{flex:1;overflow:auto;padding:16px 18px;}
+.panel{display:none;animation:fade 0.25s ease;}
+.panel.on{display:block;}
+
+/* CODE */
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;background:var(--bg1);border-radius:7px 7px 0 0;
+  border:1px solid var(--border);border-bottom:none;
+}
+.code-lbl{font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;}
+.copy-btn{
+  background:#1f6feb;border:none;color:#fff;
+  padding:3px 8px;border-radius:4px;font-size:8px;
+  cursor:pointer;font-family:var(--font);letter-spacing:0.5px;
+}
+.code-body{
+  background:var(--bg0);border:1px solid var(--border);
+  border-radius:0 0 7px 7px;padding:14px;font-size:10.5px;
+  color:var(--text0);line-height:1.9;overflow:auto;white-space:pre-wrap;
+  font-family:var(--font);margin-bottom:12px;max-height:340px;
+}
+
+/* LAYER CARDS */
+.layer{border-radius:8px;overflow:hidden;margin-bottom:10px;border-left:3px solid;}
+.l-bronze{border-color:#cd7f32;background:#140d04;}
+.l-silver{border-color:#a8a8a8;background:#0f1015;}
+.l-gold  {border-color:#ffd700;background:#141100;}
+.layer-hdr{padding:10px 14px;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;}
+.layer-desc{padding:0 14px 8px;font-size:11px;color:var(--text2);line-height:1.7;}
+
+/* SUMMARY */
+.sum-grid{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.sum-card{
+  flex:1;min-width:90px;background:var(--bg1);border:1px solid var(--border);
+  border-radius:8px;padding:10px;text-align:center;
+}
+.sum-lbl{font-size:8px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+.sum-val{font-size:16px;font-weight:800;color:var(--amber);}
+.info-box{
+  background:var(--bg1);border:1px solid var(--border);border-radius:8px;
+  padding:12px;font-size:11px;color:var(--text2);line-height:1.75;margin-bottom:12px;
+}
+.tip{
+  display:flex;gap:9px;padding:9px 12px;margin-bottom:7px;
+  background:#0d1520;border-left:3px solid var(--blue);border-radius:7px;
+  font-size:11px;color:var(--text2);line-height:1.7;
+}
+.tip-ic{color:var(--blue);flex-shrink:0;}
+
+/* STEP */
+.step-card{
+  border-radius:8px;margin-bottom:8px;background:var(--bg0);
+  border:1px solid var(--border);border-left:3px solid var(--amber);overflow:hidden;
+}
+.step-hdr{padding:9px 14px;display:flex;align-items:center;gap:10px;}
+.step-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--amber);display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:800;color:#000;flex-shrink:0;
+}
+.step-name{font-size:11px;font-weight:700;color:var(--text0);}
+.step-desc{font-size:10px;color:var(--text3);margin-top:2px;}
+.step-io{padding:0 14px 10px;display:flex;gap:10px;}
+.io-box{flex:1;background:var(--bg1);border-radius:5px;padding:7px;font-size:9px;}
+.io-lbl{color:var(--text3);letter-spacing:1px;margin-bottom:3px;text-transform:uppercase;font-size:8px;}
+
+/* ERROR */
+#err-box{
+  display:none;margin:16px;
+  background:#2a0505;border:1px solid var(--red);
+  border-radius:8px;padding:12px;color:var(--red);font-size:11px;line-height:1.8;
+}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="logo-row">
+    <div id="logo-box">⚡</div>
+    <div>
+      <div id="logo-name">GENIE</div>
+      <div id="logo-sub">Code · All Features</div>
+    </div>
+  </div>
+  <div id="live-pill">
+    <div id="live-dot"></div>
+    LIVE
+  </div>
+</div>
+
+<div id="body">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sb-head">Features</div>
+    <div class="nav on" onclick="setFeat('pipeline',this)"><span class="nav-ic">⚡</span>Pipeline Generator</div>
+    <div class="nav" onclick="setFeat('py2sql',this)"><span class="nav-ic">🔄</span>Python → SQL</div>
+    <div class="nav" onclick="setFeat('dataflow',this)"><span class="nav-ic">🗺️</span>Data Flow Explainer</div>
+    <div class="nav" onclick="setFeat('kafka',this)"><span class="nav-ic">📡</span>Kafka Integration</div>
+    <div class="nav" onclick="setFeat('dlt',this)"><span class="nav-ic">🔀</span>DLT → SDP Converter</div>
+    <div class="nav" onclick="setFeat('dash',this)"><span class="nav-ic">📊</span>Dashboard Generator</div>
+    <div class="nav" onclick="setFeat('mcp',this)"><span class="nav-ic">🔌</span>MCP Server Builder</div>
+    <div class="nav" onclick="setFeat('skill',this)"><span class="nav-ic">📄</span>skill.md Creator</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <div id="feat-hdr">
+      <div id="feat-title">Pipeline Generator</div>
+      <div id="feat-sub">Prompt → Medallion Architecture</div>
+    </div>
+
+    <div id="split">
+      <!-- LEFT -->
+      <div id="left">
+        <div id="prompt-hdr">Enter your prompt</div>
+        <textarea id="prompt-area" placeholder="Describe what you want to build...&#10;&#10;Example: Ingest customer JSON from volume, analyze loyalty tiers and total spend with medallion architecture"></textarea>
+        <div id="hints-wrap">
+          <div id="hints-lbl">Examples</div>
+          <div id="chips-list"></div>
+        </div>
+        <div id="run-wrap">
+          <div id="shortcut">Ctrl+Enter to run</div>
+          <button id="run-btn" onclick="runGenie()">⚡ &nbsp;RUN</button>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div id="right">
+        <div id="err-box"></div>
+        <div id="idle">
+          <div id="idle-ic">⚡</div>
+          <div id="idle-txt">Enter a prompt above to get started</div>
+        </div>
+        <div id="loading">
+          <div id="spinner"></div>
+          <div id="load-txt">Genie is thinking...</div>
+          <div id="load-sub">GENERATING CODE</div>
+        </div>
+        <div id="results">
+          <div id="tabs"></div>
+          <div id="panels"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const F = {
+  pipeline:{
+    title:'Pipeline Generator', sub:'Prompt → Medallion Architecture',
+    ph:'Describe your pipeline requirement...\n\nExample: Ingest customer JSON from volume, analyze loyalty tiers and total spend with medallion architecture',
+    chips:['Ingest customer JSON, analyze loyalty tiers','Load sales CSV, revenue by region and product','Read IoT sensor data, detect anomalies by device','NetSuite GL incremental load, medallion architecture'],
+    sys:`You are an expert Databricks Data Engineer. Generate complete medallion architecture pipelines using Spark Declarative Pipelines (SDP).
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"What this pipeline does","detectedSource":"JSON/CSV/Parquet/etc","layers":{"bronze":{"description":"Ingestion layer purpose","code":"Complete Python SDP code"},"silver":{"description":"Transformation/flattening purpose","code":"Complete Python SDP code"},"gold":{"description":"Aggregation/business logic purpose","code":"Complete Python SDP code"}},"tips":["Optimization tip 1","Optimization tip 2"],"runOrder":"How to run this pipeline"}`
+  },
+  py2sql:{
+    title:'Python → SQL', sub:'Convert PySpark transformations to optimized SQL',
+    ph:'Paste your PySpark Python code here...\n\nExample:\ndf = spark.read.parquet("/data/orders")\ndf2 = df.filter(df.status == "PAID")\ndf3 = df2.groupBy("customer_id").agg(sum("amount").alias("total"))',
+    chips:['Convert groupBy/agg to SQL GROUP BY','Convert DataFrame joins to SQL JOINs','Convert window functions to SQL OVER','Convert filter/where to SQL WHERE'],
+    sys:`You are an expert who converts PySpark Python code to optimized SQL.
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"What this code does","sql":"Complete converted SQL query","explanation":"Key conversion decisions","optimizations":["Optimization 1","Optimization 2"],"notes":"Important notes"}`
+  },
+  dataflow:{
+    title:'Data Flow Explainer', sub:'Explain pipeline data flow in plain English',
+    ph:'Paste your pipeline code or describe your data flow...\n\nExample: We read from S3, filter active customers, join with orders, aggregate by region, write to Redshift',
+    chips:['Explain my medallion architecture flow','Describe Bronze → Silver → Gold steps','Explain ADF pipeline data flow','Document my ETL pipeline logic'],
+    sys:`You are a Data Engineering documentation expert.
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"One line summary","steps":[{"step":1,"name":"Step name","description":"What happens","input":"Input data","output":"Output data"}],"dataLineage":"Lineage description","potentialIssues":["Issue 1"],"bestPractices":["Practice 1"]}`
+  },
+  kafka:{
+    title:'Kafka Integration', sub:'Generate Kafka streaming pipeline code',
+    ph:'Describe your Kafka streaming requirement...\n\nExample: Read from Kafka topic "orders", process in real-time, detect high-value transactions, write to Delta table',
+    chips:['Read from Kafka, process events real-time','Stream orders topic to Delta Lake','Kafka consumer with checkpointing','Multi-topic Kafka pipeline with aggregations'],
+    sys:`You are a Kafka and Spark Structured Streaming expert.
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"What this does","consumerCode":"Spark Structured Streaming code","schemaCode":"Schema definition","checkpointConfig":"Checkpoint setup","errorHandling":"Error handling approach","deploymentNotes":"Deployment instructions"}`
+  },
+  dlt:{
+    title:'DLT → SDP Converter', sub:'Migrate Delta Live Tables to Spark Declarative Pipelines',
+    ph:'Paste your old DLT (Delta Live Tables) code here...\n\nExample:\n@dlt.table\ndef bronze_orders():\n    return spark.read.format("json").load("/data/orders")',
+    chips:['Convert @dlt.table to SDP syntax','Convert DLT expectations to SDP','Migrate DLT streaming tables','Full DLT pipeline to SDP migration'],
+    sys:`You are a Databricks expert who converts DLT to new Spark Declarative Pipelines (SDP).
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"What this pipeline does","originalAnalysis":"Analysis of original DLT","convertedCode":"Complete SDP code","keyChanges":["Change 1","Change 2"],"improvements":["Improvement 1"],"migrationNotes":"Important notes"}`
+  },
+  dash:{
+    title:'Dashboard Generator', sub:'Generate analytics dashboard queries and config',
+    ph:'Describe what analytics dashboard you need...\n\nExample: Customer loyalty tier analysis — revenue by tier, top customers by spend, monthly trend',
+    chips:['Customer loyalty tier analysis dashboard','Sales revenue by region and product','IoT device anomaly monitoring','NetSuite GL executive summary dashboard'],
+    sys:`You are a data analytics expert who generates dashboard SQL and visualization configs.
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"Dashboard overview","widgets":[{"title":"Widget title","type":"bar_chart/line_chart/table/metric_card","sql":"SQL query","description":"What it shows"}],"filters":["Filter field 1"],"refreshSchedule":"Recommended frequency","notes":"Implementation notes"}`
+  },
+  mcp:{
+    title:'MCP Server Builder', sub:'Generate Model Context Protocol server code',
+    ph:'Describe what MCP server you want to build...\n\nExample: MCP server that connects to our SQL database, allows AI to query tables, run reports, and check data quality',
+    chips:['MCP server for SQL database access','MCP server for Databricks workspace','MCP server for data catalog exploration','MCP server for pipeline monitoring'],
+    sys:`You are an MCP (Model Context Protocol) expert.
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"What this MCP server does","serverCode":"Complete MCP server code","tools":[{"name":"tool_name","description":"What it does","parameters":"Parameters"}],"configCode":"Config and setup","deploymentInstructions":"How to deploy","usageExamples":["Example prompt 1"]}`
+  },
+  skill:{
+    title:'skill.md Creator', sub:'Generate step-by-step skill instruction files',
+    ph:'Describe what skill you want to create...\n\nExample: Skill for reviewing ADF pipelines for best practices, error handling, and performance',
+    chips:['Skill for reviewing ADF pipelines','Skill for PySpark code optimization','Skill for data quality checks','Skill for incremental load patterns'],
+    sys:`You are a Databricks and AI tooling expert who creates skill.md instruction files.
+Return ONLY valid JSON, no markdown, no backticks:
+{"summary":"What this skill does","skillMarkdown":"Complete skill.md content","triggerPhrases":["Phrase 1","Phrase 2"],"prerequisites":["Prerequisite 1"],"exampleUsage":["Example prompt 1"]}`
+  }
+};
+
+let curFeat='pipeline';
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function setFeat(key,el){
+  curFeat=key;
+  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('on'));
+  el.classList.add('on');
+  const f=F[key];
+  document.getElementById('feat-title').textContent=f.title;
+  document.getElementById('feat-sub').textContent=f.sub;
+  document.getElementById('prompt-area').placeholder=f.ph;
+  document.getElementById('prompt-area').value='';
+  renderChips(f.chips);
+  setState('idle');
+}
+
+function renderChips(chips){
+  const c=document.getElementById('chips-list');
+  c.innerHTML='';
+  chips.forEach(h=>{
+    const d=document.createElement('div');
+    d.className='chip';
+    d.innerHTML=`<span class="chip-ic">💡</span><span>${h}</span>`;
+    d.onclick=()=>{document.getElementById('prompt-area').value=h;};
+    c.appendChild(d);
+  });
+}
+
+function setState(s){
+  document.getElementById('idle').style.display    =s==='idle'   ?'flex':'none';
+  document.getElementById('loading').style.display =s==='load'   ?'flex':'none';
+  document.getElementById('results').style.display =s==='result' ?'flex':'none';
+  document.getElementById('err-box').style.display =s==='error'  ?'block':'none';
+  const btn=document.getElementById('run-btn');
+  btn.disabled=s==='load';
+  btn.innerHTML=s==='load'?'⏳ &nbsp;GENERATING...':'⚡ &nbsp;RUN';
+}
+
+function switchTab(key,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('pan-'+key).classList.add('on');
+}
+
+function addTab(key,lbl,html,first){
+  const tabs=document.getElementById('tabs');
+  const panels=document.getElementById('panels');
+  const btn=document.createElement('button');
+  btn.className='tab'+(first?' on':'');
+  btn.textContent=lbl;
+  btn.onclick=()=>switchTab(key,btn);
+  tabs.appendChild(btn);
+  const p=document.createElement('div');
+  p.className='panel'+(first?' on':'');
+  p.id='pan-'+key;
+  p.innerHTML=html;
+  panels.appendChild(p);
+}
+
+function codeBlock(id,lbl,code){
+  return `<div class="code-hdr">
+    <span class="code-lbl">${lbl}</span>
+    <button class="copy-btn" id="cb-${id}" onclick="copyIt('${id}')">📋 COPY</button>
+  </div>
+  <pre class="code-body" id="cb-pre-${id}">${esc(code)}</pre>`;
+}
+
+function copyIt(id){
+  navigator.clipboard.writeText(document.getElementById('cb-pre-'+id).textContent).then(()=>{
+    const b=document.getElementById('cb-'+id);
+    b.textContent='✅ COPIED';
+    setTimeout(()=>b.textContent='📋 COPY',2000);
+  });
+}
+
+function renderResult(r){
+  document.getElementById('tabs').innerHTML='';
+  document.getElementById('panels').innerHTML='';
+  let first=true;
+
+  if(curFeat==='pipeline'){
+    addTab('ov','Overview',
+      `<div class="sum-grid">
+        <div class="sum-card"><div class="sum-lbl">Source</div><div class="sum-val" style="font-size:12px;color:var(--blue);">${esc(r.detectedSource||'Auto')}</div></div>
+        <div class="sum-card"><div class="sum-lbl">Layers</div><div class="sum-val">3</div></div>
+        <div class="sum-card"><div class="sum-lbl">Pattern</div><div class="sum-val" style="font-size:11px;color:var(--green);">Medallion</div></div>
+      </div>
+      <div class="info-box">${esc(r.summary)}</div>
+      ${r.runOrder?`<div style="background:#0a1a0a;border-left:3px solid var(--green);border-radius:6px;padding:9px 12px;font-size:10px;color:var(--text1);line-height:1.8;"><div style="font-size:8px;color:var(--green);letter-spacing:2px;margin-bottom:5px;">▶ RUN ORDER</div>${esc(r.runOrder)}</div>`:''}`,true);
+    if(r.layers?.bronze) addTab('bronze','🟤 Bronze',`<div class="layer l-bronze"><div class="layer-hdr" style="color:#cd7f32;">🟤 BRONZE — INGESTION</div><div class="layer-desc">${esc(r.layers.bronze.description)}</div></div>${codeBlock('bronze','bronze.py',r.layers.bronze.code)}`,false);
+    if(r.layers?.silver) addTab('silver','⚪ Silver',`<div class="layer l-silver"><div class="layer-hdr" style="color:#a8a8a8;">⚪ SILVER — TRANSFORMATION</div><div class="layer-desc">${esc(r.layers.silver.description)}</div></div>${codeBlock('silver','silver.py',r.layers.silver.code)}`,false);
+    if(r.layers?.gold)   addTab('gold','🟡 Gold',`<div class="layer l-gold"><div class="layer-hdr" style="color:#ffd700;">🟡 GOLD — AGGREGATION</div><div class="layer-desc">${esc(r.layers.gold.description)}</div></div>${codeBlock('gold','gold.py',r.layers.gold.code)}`,false);
+    if(r.tips?.length)   addTab('tips','💡 Tips',r.tips.map(t=>`<div class="tip"><span class="tip-ic">→</span><span>${esc(t)}</span></div>`).join(''),false);
+  }
+  else if(curFeat==='py2sql'){
+    addTab('sql','SQL Output',`${codeBlock('sql-out','output.sql',r.sql)}<div class="info-box">${esc(r.explanation)}</div>`,true);
+    if(r.optimizations?.length) addTab('opts','Optimizations',r.optimizations.map(o=>`<div class="tip"><span style="color:var(--green);">✓</span><span>${esc(o)}</span></div>`).join(''),false);
+    if(r.notes) addTab('notes','Notes',`<div class="info-box">${esc(r.notes)}</div>`,false);
+  }
+  else if(curFeat==='dataflow'){
+    addTab('steps','Flow Steps',
+      `<div class="info-box">${esc(r.summary)}</div>`+
+      (r.steps||[]).map(s=>`<div class="step-card">
+        <div class="step-hdr"><div class="step-num">${s.step}</div><div><div class="step-name">${esc(s.name)}</div><div class="step-desc">${esc(s.description)}</div></div></div>
+        <div class="step-io">
+          <div class="io-box"><div class="io-lbl">IN</div><span style="color:var(--text2);font-size:10px;">${esc(s.input)}</span></div>
+          <div class="io-box"><div class="io-lbl">OUT</div><span style="color:var(--green);font-size:10px;">${esc(s.output)}</span></div>
+        </div>
+      </div>`).join(''),true);
+    if(r.potentialIssues?.length) addTab('issues','Issues',r.potentialIssues.map(i=>`<div class="tip" style="border-left-color:var(--red);background:#1a0505;"><span style="color:var(--red);">⚠</span><span>${esc(i)}</span></div>`).join(''),false);
+    if(r.bestPractices?.length)   addTab('bp','Best Practices',r.bestPractices.map(b=>`<div class="tip"><span style="color:var(--green);">✓</span><span>${esc(b)}</span></div>`).join(''),false);
+  }
+  else {
+    // GENERIC fallback
+    const keys=Object.keys(r);
+    if(r.summary){addTab('ov','Overview',`<div class="info-box">${esc(r.summary)}</div>`,true);first=false;}
+    keys.filter(k=>k!=='summary'&&r[k]).forEach(k=>{
+      const v=r[k];
+      const lbl=k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase()).slice(0,14);
+      let html='';
+      if(typeof v==='string'&&v.length>60) html=codeBlock(k,lbl,v);
+      else if(Array.isArray(v)) html=v.map(x=>`<div class="tip"><span class="tip-ic">→</span><span>${esc(typeof x==='object'?JSON.stringify(x,null,2):x)}</span></div>`).join('');
+      else html=`<div class="info-box">${esc(String(v))}</div>`;
+      addTab(k,lbl,html,first);first=false;
+    });
+  }
+
+  setState('result');
+}
+
+async function runGenie(){
+  const prompt=document.getElementById('prompt-area').value.trim();
+  if(!prompt)return;
+  setState('load');
+  try{
+    const res=await fetch('/api/genie',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt,feature:curFeat,systemPrompt:F[curFeat].sys})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    renderResult(data);
+  }catch(e){
+    const eb=document.getElementById('err-box');
+    eb.innerHTML=`<strong>⛔ Error</strong><br><br>${esc(e.message)}<br><br>Check the console or try again.`;
+    setState('error');
+  }
+}
+
+document.getElementById('prompt-area').addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='Enter')runGenie();
+});
+
+renderChips(F.pipeline.chips);
+</script>
+</body>
+</html>
